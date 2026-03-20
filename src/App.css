@@ -172,10 +172,33 @@ body {
   color: #ccc;
 }
 
-/* Sur très petit écran, masquer l'eyebrow et le subtitle pour gagner de la place */
-@media (max-width: 400px) {
+/* ── Mobile layout ───────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  /* Titre principal : légèrement réduit pour ne pas toucher les bords */
+  .title-main {
+    font-size: clamp(2rem, 11vw, 3.2rem);
+  }
+
+  /* Eyebrow + subtitle remontés en haut, sur une seule ligne */
   .title-eyebrow,
   .title-sub {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    justify-content: center;
+  }
+
+  .title-eyebrow {
+    top: 20px;
+  }
+
+  .title-sub {
+    top: 40px;
+  }
+
+  /* Lignes déco masquées sur mobile (trop larges) */
+  .title-sub-line {
     display: none;
   }
 }
