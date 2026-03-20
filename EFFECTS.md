@@ -59,6 +59,63 @@ Trois anneaux concentriques de particules GPGPU sur fond blanc. Hover répulsif 
 
 ---
 
+## Ripple
+**Dossier :** `src/components/GPGPUParticles_ripple/`
+
+2304 particules (48×48 GPGPU) disposées en grille régulière, comme une surface d'eau calme. Le curseur génère des ondes concentriques qui se propagent à la vitesse de la lumière (enfin, du GPU).
+
+### Visuels
+- Au repos : grille légèrement animée par un bruit lent, couleur gris-bleu doux
+- Au hover : ondes concentriques se propagent depuis le curseur, les particules proches s'agrandissent et changent de couleur (`#2c64ed` → `#f84242` → `#ffcf03`)
+- Cercles mous (gaussian) au lieu de teardrops
+- L'onde s'atténue exponentiellement avec la distance
+
+### Technique
+- GPGPU **48×48** (2304 particules) en grille régulière avec micro-jitter
+- Sim shader : `wave = sin(d * 18.0 - time * 4.0)`, `envelope = exp(-d * 3.5) * hover`
+- Pas de lifecycle — les particules restent en place, seule la taille pulse
+- Fragment shader : cercle gaussien `exp(-d*d*20.0)`, couleur driven by `vVelocity` (wave intensity)
+
+---
+
+## Constellation
+**Dossier :** `src/components/GPGPUParticles_constellation/`
+
+1024 particules fixes comme des étoiles. Des lignes se tracent dynamiquement entre les particules proches, formant des constellations vivantes. Le curseur repousse les étoiles et les fait briller.
+
+### Visuels
+- Étoiles avec halo lumineux, scintillement individuel (fréquence et phase personnelles)
+- Lignes semi-transparentes entre particules à moins de `0.18` (sim space), couleur `#2c64ed` → `#f84242` qui fade avec la distance
+- Curseur : repousse les étoiles proches, les fait briller et rompt les connexions locales
+- Ambiance : ciel étoilé vivant, réseau de constellations qui se redessine en temps réel
+
+### Technique
+- GPGPU **32×32** (1024 particules) avec orbites personnelles lentes autour de `refPos`
+- `LineSegments` dynamiques : lecture GPU chaque 2 frames via `readRenderTargetPixels`, O(n²) avec seuil de distance
+- `MAX_LINES = 2000`, `CONNECT_DIST = 0.18`
+- Fragment shader : core `smoothstep(0.18, 0)` + halo `smoothstep(0.5, 0) * 0.4`
+
+---
+
+## Breath
+**Dossier :** `src/components/GPGPUParticles_breath/`
+
+1024 particules qui respirent en rythme lent. L'onde de respiration se propage radialement depuis le centre (comme des ronds dans l'eau). Le curseur crée une zone de contre-rythme — quand le reste s'expanse, la zone curseur se contracte.
+
+### Visuels
+- Au repos : expansion/contraction lente (~1.2Hz) avec propagation radiale (vague qui parcourt l'écran)
+- Au hover : zone de contre-phase autour du curseur — les particules y font l'inverse, créent un creux dans la vague. Couleur `#ffcf03` (chaud) vs bleu/rouge au repos
+- Cercles gaussiens flous qui gonflent et dégonflent
+- Effet hypnotique et organique
+
+### Technique
+- GPGPU **32×32** avec `phaseOffset = distFromCenter * 2.5 + seed * 0.8` pour propagation radiale
+- `breathCycle = sin(time * 1.2 + phaseOffset)`, amplitude 12% sur position, 60% sur scale
+- Contre-phase : `sin(time * 1.2 + phaseOffset + PI)` dans zone `smoothstep(0.3, 0, dCursor) * hover`
+- Fragment shader : `exp(-d*d*20.0)` avec couleur lerp `uColor1 → uColor2 → uColor3`
+
+---
+
 ## Aurora
 **Dossier :** `src/components/GPGPUParticles_aurora/`
 
