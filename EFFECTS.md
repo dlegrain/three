@@ -1,21 +1,82 @@
 # Effects Library
 
-## Shoal
-**Dossier :** `src/components/GPGPUParticles_shoal/`
+## Vortex
+**Dossier :** `src/components/GPGPUParticles_vortex/`
 
-1024 particules (32×32 GPGPU) qui forment un anneau au repos et suivent le curseur comme un banc de poissons — l'anneau tourne sur lui-même et se déforme organiquement.
+4096 particules (64×64 GPGPU) qui tournent en spirale autour du curseur. La force tangentielle crée une rotation orbitale ; une légère aspiration centripète maintient la spirale sans provoquer d'entassement.
 
 ### Visuels
-- Au repos : anneau unique serré centré à l'origine (r ≈ 0.22, width 0.06)
-- Au hover : l'anneau se transpose autour du curseur et orbite lentement (r 0.08–0.15)
-- Teardrops orientés dans la direction du mouvement au hover, tangents à l'anneau au repos
-- Gradient : `#2c64ed` → `#f84242` → `#ffcf03`
+- Au repos : nuage diffus avec flottement organique
+- Au hover : spirale rotative autour du curseur — les particules tournent en orbite et gardent leur distance
+- Glow additif : cercles gaussiens, core blanc au centre de la spirale
+- Couleurs : `#1a0aff` (bleu profond) → `#ff3aff` (magenta) → `#ffffff` (blanc, cœur)
+- Additive blending → effet lumineux sur fond sombre
+
+### Technique
+- GPGPU ping-pong **64×64** (4096 particules)
+- Force tangentielle : `tangent = vec2(-toCursor.y, toCursor.x)` (perpendiculaire, normalisée)
+- Inward pull faible (`0.004`) pour spirale légère sans clumping au centre
+- Force de retour active même en zone vortex (`returnStr = (1 - influence * 0.5) * 0.012`)
+- `velocity` encode l'influence vortex → luminosité/couleur
+
+---
+
+## DNA
+**Dossier :** `src/components/GPGPUParticles_dna/`
+
+1024 particules (32×32 GPGPU) organisées en double hélice 3D projetée en 2D. La rotation est continue. Le curseur "dénature" l'ADN — les deux brins s'écartent latéralement au survol.
+
+### Visuels
+- Double hélice verticale, 8 tours, deux brins (phase opposée = `±PI`)
+- Projection perspective simple : `x_proj = cos(angle) * r * (0.7 + sin(angle) * 0.3)`
+- Couleur selon hauteur Y : `#00ffcc` (cyan) → `#0066ff` (bleu) → `#ffffff` (blanc, dénaturation)
+- Additive blending — les croisements s'illuminent
 
 ### Technique
 - GPGPU ping-pong **32×32** (1024 particules)
-- Sim shader : orbit angle personnel par seed, vitesse 0.5–1.0 rad/s, pull ×2.5 au hover, composante tangentielle pour l'arc
-- `uIsHovering` lerp asymétrique : 0.05 (entrée) / 0.02 (sortie) → settle organique
-- Caméra perspective FOV 40°, z=3.1
+- Index de particule (`idx`) détermine : strand A (idx < 512) ou strand B (idx ≥ 512)
+- `helixAngle = tStrand * 8 * 2PI + uTime * 0.8`
+- Dénaturation : `targetPos.x += strandSign * denature * 0.15` + chaos seed
+- `velocity` encode l'état de dénaturation → shift couleur vers blanc
+
+---
+
+## Fracture
+**Dossier :** `src/components/GPGPUParticles_fracture/`
+
+2304 particules (48×48 GPGPU) en grille parfaite — comme des carreaux de verre. Le curseur déclenche une onde de choc qui brise la grille ; les éclats partent en rotation puis se reconstituent.
+
+### Visuels
+- Au repos : grille régulière de petits carreaux (`#445566`, gris-bleu)
+- Sur hover/click : onde de choc se propageant depuis le curseur (`shockRadius = shockTime * 0.6`)
+- Les fragments impactés explosent en direction radiale, tournoient sur eux-mêmes, puis retournent en place
+- Couleur au choc : `#445566` → `#ff6600` → `#ffeecc` (orange chaud, éclat)
+- Forme : `sdBox` rotaté par seed → carreaux irréguliers, pas des ronds
+
+### Technique
+- GPGPU ping-pong **48×48** (2304 particules), grille exacte
+- `uShockTime` : timer CPU remis à 0 sur `mouseenter` et `click`, incrémenté chaque frame
+- Onde de choc : `onWaveFront = exp(-((distToRest - shockRadius) / 0.08)² * 12)`
+- Direction d'explosion : mix 50/50 radiale + fractureDir (seed)
+- Retour : spring amorti `pos += normalize(toRef) * min(dist,0.2)/0.2 * returnStr * dist * 5`
+
+---
+
+## Aurora
+**Dossier :** `src/components/GPGPUParticles_aurora/`
+
+Anneau de 4096 particules (64×64 GPGPU) qui respire et suit le curseur. Inspiré de Google Antigravity (light theme).
+
+### Visuels
+- Teardrops orientés tangentiellement à l'anneau (`sdRoundBox` rotaté vers le centre)
+- Gradient : `#2c64ed` → `#f84242` → `#ffcf03`
+- L'anneau suit le curseur avec lag (`lerp 0.015`), dérive autonomement sans souris
+
+### Technique
+- GPGPU ping-pong **64×64** (4096 particules)
+- Rayon oscillant : `0.175 + sin(t)*0.03 + cos(t*3)*0.02`
+- Sim shader : lifecycle par seed, attraction smoothstep, bruit multi-fréquences
+- Vertex shader : Simplex 3D deux fréquences pour flottement organique
 
 ---
 
@@ -127,7 +188,7 @@ Anneau de particules GPGPU sur fond blanc, inspiré de Google Antigravity (light
 - L'anneau suit le curseur avec lag, dérive autonomement sans souris
 
 ### Technique
-- GPGPU ping-pong 256×256 (65k particules)
+- GPGPU ping-pong **64×64** (4096 particules)
 - Caméra perspective FOV 40°, z=3.1
 - Sim shader : lifecycle par seed (`lifeEnd = 3 + sin(seed2*100)`), attraction smoothstep, fade in/out
 - Vertex shader : bruit Simplex 2 fréquences (`*10 * 0.005 * dist` + `*0.5 * 0.02`)

@@ -26,11 +26,16 @@ export function createRenderMaterial(opts: RenderOptions): THREE.ShaderMaterial 
       uColor2:       { value: new THREE.Color(opts.color2) },
       uColor3:       { value: new THREE.Color(opts.color3) },
       uAlpha:        { value: opts.alpha ?? 1.0 },
-      uRingPos:      { value: new THREE.Vector2(0, 0) },
+      uIsHovering:   { value: 0.0 },
+      uPulseProgress:{ value: 0.0 },
+      uMousePos:     { value: new THREE.Vector2(0, 0) },
+      uRez:          { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+      uWorldScaleX:  { value: 2.0 },
+      uWorldScaleY:  { value: 1.1 },
     },
     transparent: true,
     depthWrite: false,
-    blending: THREE.NormalBlending,
+    blending: THREE.AdditiveBlending,
   })
 }
 
@@ -39,21 +44,15 @@ export function createParticleGeometry(): THREE.BufferGeometry {
 
   const positions = new Float32Array(total * 3)
   const uvs       = new Float32Array(total * 2)
-  const seeds     = new Float32Array(total * 4)  // random per-particle seeds
+  const seeds     = new Float32Array(total * 4)
 
   for (let i = 0; i < total; i++) {
     const col = i % SIM_SIZE
     const row = Math.floor(i / SIM_SIZE)
 
-    uvs[i * 2 + 0] = col / (SIM_SIZE - 1)
-    uvs[i * 2 + 1] = row / (SIM_SIZE - 1)
+    uvs[i * 2 + 0] = col / SIM_SIZE
+    uvs[i * 2 + 1] = row / SIM_SIZE
 
-    // Dummy world positions (overridden by GPGPU texture in vertex shader)
-    positions[i * 3 + 0] = 0
-    positions[i * 3 + 1] = 0
-    positions[i * 3 + 2] = 0
-
-    // Per-particle random seeds for noise variation
     seeds[i * 4 + 0] = Math.random()
     seeds[i * 4 + 1] = Math.random()
     seeds[i * 4 + 2] = Math.random()

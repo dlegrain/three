@@ -3,6 +3,10 @@ import { GPGPUParticles as Gravity }        from './components/GPGPUParticles'
 import { GPGPUParticles as Ripple }         from './components/GPGPUParticles_ripple'
 import { GPGPUParticles as Constellation }  from './components/GPGPUParticles_constellation'
 import { GPGPUParticles as Breath }         from './components/GPGPUParticles_breath'
+import { GPGPUParticles as Vortex }         from './components/GPGPUParticles_vortex'
+import { GPGPUParticles as DNA }            from './components/GPGPUParticles_dna'
+import { GPGPUParticles as Fracture }       from './components/GPGPUParticles_fracture'
+import { GPGPUParticles as Aurora }         from './components/GPGPUParticles_aurora'
 import './App.css'
 
 const EFFECTS = [
@@ -10,6 +14,10 @@ const EFFECTS = [
   { id: 'ripple',        label: 'Ripple',         Component: Ripple },
   { id: 'constellation', label: 'Constellation',  Component: Constellation },
   { id: 'breath',        label: 'Breath',         Component: Breath },
+  { id: 'vortex',        label: 'Vortex',         Component: Vortex },
+  { id: 'dna',           label: 'DNA',            Component: DNA },
+  { id: 'fracture',      label: 'Fracture',       Component: Fracture },
+  { id: 'aurora',        label: 'Aurora',         Component: Aurora },
 ] as const
 
 function App() {

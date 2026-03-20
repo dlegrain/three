@@ -4,14 +4,18 @@ Interactive particle system built with Three.js + React + TypeScript. Each effec
 
 ## Effects
 
-| Name | Description |
-|---|---|
-| **Gravity** | Particles float freely. The cursor creates a gravity field — nearby particles are absorbed, distant ones barely move. Density shifts without mass migration. |
-| **Ripple** | 16 384 particles on a fixed grid. Each cursor movement triggers a single concentric wave that expands across the screen and fades out. |
-| **Constellation** | Stars with personal twinkle. Dynamic lines connect nearby particles, forming living constellations. The cursor scatters stars and breaks local connections. |
-| **Breath** | Slow radial breathing pulse (~1.2Hz). The cursor creates a counter-phase zone — when everything expands around it, the cursor area contracts. |
+| Name | Particles | Description |
+|---|---|---|
+| **Gravity** | 1 024 | Particles float freely. The cursor creates a local gravity field — nearby particles are absorbed, distant ones barely move. |
+| **Ripple** | 16 384 | Fixed grid. Each cursor movement triggers a single concentric wave that expands and fades out. |
+| **Constellation** | 1 024 | Stars with personal twinkle. Dynamic lines connect nearby particles. The cursor scatters stars and breaks connections. |
+| **Breath** | 1 024 | Slow radial breathing pulse (~1.2Hz). The cursor creates a counter-phase zone that contracts when everything else expands. |
+| **Vortex** | 4 096 | Particles spiral around the cursor with a tangential force. Additive glow — white core at the centre of the vortex. |
+| **DNA** | 1 024 | Rotating double helix projected from 3D. The cursor denatures the strands — they split apart and chaos on hover. |
+| **Fracture** | 2 304 | Perfect grid of glass tiles. Cursor or click triggers an expanding shockwave — shards spin away and reassemble. |
+| **Aurora** | 4 096 | Breathing ring that follows the cursor with lag. Teardrop particles oriented tangentially to the ring. |
 
-A discrete toggle in the bottom-right corner switches between effects.
+A toggle at the bottom switches between effects.
 
 ## Stack
 

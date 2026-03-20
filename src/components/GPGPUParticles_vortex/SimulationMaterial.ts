@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import simFrag from './shaders/sim.frag.glsl'
 
-const SIM_SIZE = 64  // 64×64 = 4096 particle slots
+const SIM_SIZE = 64  // 64×64 = 4096 particles
 
 const simVert = /* glsl */`
   void main() {
@@ -9,15 +9,16 @@ const simVert = /* glsl */`
   }
 `
 
-// Generate reference positions: distributed on a large plane (will be masked by ring)
 function buildRefTexture(): THREE.DataTexture {
   const total = SIM_SIZE * SIM_SIZE
   const data = new Float32Array(total * 4)
 
+  // Scattered cloud — particles will be pulled into vortex from rest
   for (let i = 0; i < total; i++) {
-    // Spread over a 2×2 world-unit square
-    data[i * 4 + 0] = (Math.random() - 0.5) * 2.0
-    data[i * 4 + 1] = (Math.random() - 0.5) * 2.0
+    const angle = Math.random() * Math.PI * 2
+    const r = 0.05 + Math.random() * 0.4
+    data[i * 4 + 0] = Math.cos(angle) * r
+    data[i * 4 + 1] = Math.sin(angle) * r
     data[i * 4 + 2] = 0.0
     data[i * 4 + 3] = 0.0
   }
@@ -30,14 +31,14 @@ function buildRefTexture(): THREE.DataTexture {
 function buildInitialPositionTexture(): THREE.DataTexture {
   const total = SIM_SIZE * SIM_SIZE
   const data = new Float32Array(total * 4)
-
   for (let i = 0; i < total; i++) {
-    data[i * 4 + 0] = (Math.random() - 0.5) * 2.0
-    data[i * 4 + 1] = (Math.random() - 0.5) * 2.0
+    const angle = Math.random() * Math.PI * 2
+    const r = Math.random() * 0.4
+    data[i * 4 + 0] = Math.cos(angle) * r
+    data[i * 4 + 1] = Math.sin(angle) * r
     data[i * 4 + 2] = 0.0
     data[i * 4 + 3] = 0.0
   }
-
   const tex = new THREE.DataTexture(data, SIM_SIZE, SIM_SIZE, THREE.RGBAFormat, THREE.FloatType)
   tex.needsUpdate = true
   return tex
@@ -47,7 +48,7 @@ export class SimulationRenderer {
   private renderer: THREE.WebGLRenderer
   private scene: THREE.Scene
   private camera: THREE.OrthographicCamera
-  private material: THREE.ShaderMaterial
+  material: THREE.ShaderMaterial
   private targets: [THREE.WebGLRenderTarget, THREE.WebGLRenderTarget]
   private pingPong = 0
   readonly size = SIM_SIZE
@@ -73,14 +74,12 @@ export class SimulationRenderer {
       vertexShader: simVert,
       fragmentShader: simFrag,
       uniforms: {
-        uPosition:        { value: buildInitialPositionTexture() },
-        uPosRefs:         { value: buildRefTexture() },
-        uRingPos:         { value: new THREE.Vector2(0, 0) },
-        uTime:            { value: 0 },
-        uRingRadius:      { value: 0.175 },
-        uRingWidth:       { value: 0.107 },
-        uRingWidth2:      { value: 0.05 },
-        uRingDisplacement:{ value: 0.15 },
+        uPosition:      { value: buildInitialPositionTexture() },
+        uPosRefs:       { value: buildRefTexture() },
+        uMousePos:      { value: new THREE.Vector2(0, 0) },
+        uTime:          { value: 0 },
+        uIsHovering:    { value: 0.0 },
+        uVortexStrength:{ value: 1.0 },
       },
     })
 
@@ -88,14 +87,17 @@ export class SimulationRenderer {
     this.scene.add(mesh)
   }
 
-  tick(time: number, ringPos: THREE.Vector2, ringRadius: number): THREE.Texture {
+  tick(time: number, isHovering: number, mouseWorld: THREE.Vector2, worldHalfW: number, worldHalfH: number): THREE.Texture {
     const read  = this.targets[this.pingPong]
     const write = this.targets[1 - this.pingPong]
 
-    this.material.uniforms.uPosition.value  = read.texture
-    this.material.uniforms.uTime.value      = time
-    this.material.uniforms.uRingPos.value   = ringPos
-    this.material.uniforms.uRingRadius.value = ringRadius
+    const mouseSimX = mouseWorld.x / worldHalfW * 0.5
+    const mouseSimY = mouseWorld.y / worldHalfH * 0.5
+
+    this.material.uniforms.uPosition.value   = read.texture
+    this.material.uniforms.uTime.value       = time
+    this.material.uniforms.uIsHovering.value = isHovering
+    this.material.uniforms.uMousePos.value.set(mouseSimX, mouseSimY)
 
     this.renderer.setRenderTarget(write)
     this.renderer.render(this.scene, this.camera)

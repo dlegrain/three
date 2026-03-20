@@ -17,7 +17,7 @@ vec2 hash(vec2 p) {
 }
 
 void main() {
-  vec2 simTexCoords = gl_FragCoord.xy / vec2(256.0, 256.0);
+  vec2 simTexCoords = gl_FragCoord.xy / vec2(64.0, 64.0);
   vec4 pFrame = texture2D(uPosition, simTexCoords);
   float scale    = pFrame.z;
   float velocity = pFrame.w;
