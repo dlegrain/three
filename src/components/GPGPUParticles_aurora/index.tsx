@@ -83,7 +83,19 @@ export function GPGPUParticles({
       ringTarget.set(worldHit.x, worldHit.y)
     }
 
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      const touch = e.touches[0]
+      const rect = canvas.getBoundingClientRect()
+      const ndcX =  ((touch.clientX - rect.left) / rect.width)  * 2 - 1
+      const ndcY = -((touch.clientY - rect.top)  / rect.height) * 2 + 1
+      raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera)
+      raycaster.ray.intersectPlane(plane, worldHit)
+      ringTarget.set(worldHit.x, worldHit.y)
+    }
+
     canvas.addEventListener('mousemove', onMouseMove)
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false })
 
     // ── RAF loop ──────────────────────────────────────────────────────────────
     let raf: number
@@ -124,6 +136,7 @@ export function GPGPUParticles({
       cancelAnimationFrame(raf)
       ro.disconnect()
       canvas.removeEventListener('mousemove', onMouseMove)
+      canvas.removeEventListener('touchmove', onTouchMove)
       sim.dispose()
       geometry.dispose()
       material.dispose()

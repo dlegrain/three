@@ -14,7 +14,7 @@ body {
 .app {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  height: 100svh;
 }
 
 .particles-canvas {
@@ -33,9 +33,10 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: clamp(10px, 2vh, 16px);
   pointer-events: none;
   user-select: none;
+  padding: 0 16px;
 }
 
 /* Eyebrow line */
@@ -126,11 +127,16 @@ body {
 
 .effect-toggle {
   position: absolute;
-  bottom: 24px;
-  right: 28px;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 2px;
   align-items: center;
+  width: calc(100% - 32px);
+  max-width: 600px;
 }
 
 .effect-btn {
@@ -143,8 +149,12 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 0;
+  padding: 8px 6px;
   transition: color 0.2s;
+  /* Tap target suffisant sur mobile */
+  min-height: 36px;
+  display: flex;
+  align-items: center;
 }
 
 .effect-btn:hover {
@@ -160,4 +170,12 @@ body {
   content: '·';
   margin-right: 6px;
   color: #ccc;
+}
+
+/* Sur très petit écran, masquer l'eyebrow et le subtitle pour gagner de la place */
+@media (max-width: 400px) {
+  .title-eyebrow,
+  .title-sub {
+    display: none;
+  }
 }

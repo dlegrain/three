@@ -102,10 +102,27 @@ export function GPGPUParticles({
     const onMouseLeave = () => { isHoveringTarget = 0.0; mouseWorld.set(0, 0) }
     const onClick      = () => triggerShock()
 
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      const touch = e.touches[0]
+      const rect = canvas.getBoundingClientRect()
+      const ndcX =  ((touch.clientX - rect.left) / rect.width)  * 2 - 1
+      const ndcY = -((touch.clientY - rect.top)  / rect.height) * 2 + 1
+      raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera)
+      raycaster.ray.intersectPlane(plane, worldHit)
+      mouseWorld.set(worldHit.x, worldHit.y)
+      isHoveringTarget = 1.0
+    }
+    const onTouchStart = (e: TouchEvent) => { onTouchMove(e); triggerShock() }
+    const onTouchEnd   = () => { isHoveringTarget = 0.0; mouseWorld.set(0, 0) }
+
     canvas.addEventListener('mousemove',  onMouseMove)
     canvas.addEventListener('mouseenter', onMouseEnter)
     canvas.addEventListener('mouseleave', onMouseLeave)
     canvas.addEventListener('click',      onClick)
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false })
+    canvas.addEventListener('touchmove',  onTouchMove,  { passive: false })
+    canvas.addEventListener('touchend',   onTouchEnd)
 
     let raf: number
     const clock = new THREE.Clock()
@@ -145,6 +162,9 @@ export function GPGPUParticles({
       canvas.removeEventListener('mouseenter', onMouseEnter)
       canvas.removeEventListener('mouseleave', onMouseLeave)
       canvas.removeEventListener('click',      onClick)
+      canvas.removeEventListener('touchstart', onTouchStart)
+      canvas.removeEventListener('touchmove',  onTouchMove)
+      canvas.removeEventListener('touchend',   onTouchEnd)
       sim.dispose()
       geometry.dispose()
       material.dispose()
