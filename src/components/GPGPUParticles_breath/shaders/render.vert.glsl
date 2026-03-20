@@ -1,0 +1,39 @@
+precision highp float;
+
+#include ./simplex.glsl
+
+attribute vec4 seeds;
+
+uniform sampler2D uGpgpu;
+uniform float uTime;
+uniform float uParticleScale;
+uniform float uPixelRatio;
+uniform int uColorScheme;
+uniform float uIsHovering;
+uniform float uPulseProgress;
+uniform float uWorldScaleX;   // world half-width  (e.g. 2.006)
+uniform float uWorldScaleY;   // world half-height (e.g. 1.128)
+
+varying vec4 vSeeds;
+varying float vVelocity;
+varying vec2 vLocalPos;
+varying vec2 vScreenPos;
+varying float vScale;
+
+void main() {
+  vec4 pos = texture2D(uGpgpu, uv);
+  vSeeds = seeds;
+
+  vec2 worldPos = pos.xy * vec2(uWorldScaleX, uWorldScaleY) * 2.0;
+
+  vVelocity = pos.w;
+  vScale    = pos.z;
+  vLocalPos = pos.xy;
+
+  vec4 viewSpace = modelViewMatrix * vec4(vec3(worldPos, 0.), 1.0);
+  gl_Position = projectionMatrix * viewSpace;
+  vScreenPos  = gl_Position.xy;
+
+  // Point size follows breath scale — inflates and deflates
+  gl_PointSize = ((vScale * 6.0) * (uPixelRatio * 0.5) * uParticleScale) + (0.5 * uPixelRatio);
+}
