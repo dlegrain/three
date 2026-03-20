@@ -1,10 +1,24 @@
-import { GPGPUParticles } from './components/GPGPUParticles'
+import { useState } from 'react'
+import { GPGPUParticles as Gravity }        from './components/GPGPUParticles'
+import { GPGPUParticles as Ripple }         from './components/GPGPUParticles_ripple'
+import { GPGPUParticles as Constellation }  from './components/GPGPUParticles_constellation'
+import { GPGPUParticles as Breath }         from './components/GPGPUParticles_breath'
 import './App.css'
 
+const EFFECTS = [
+  { id: 'gravity',       label: 'Gravity',       Component: Gravity },
+  { id: 'ripple',        label: 'Ripple',         Component: Ripple },
+  { id: 'constellation', label: 'Constellation',  Component: Constellation },
+  { id: 'breath',        label: 'Breath',         Component: Breath },
+] as const
+
 function App() {
+  const [activeIdx, setActiveIdx] = useState(0)
+  const { Component } = EFFECTS[activeIdx]
+
   return (
     <div className="app">
-      <GPGPUParticles
+      <Component
         color1="#2c64ed"
         color2="#f84242"
         color3="#ffcf03"
@@ -33,6 +47,18 @@ function App() {
           <span className="title-sub-line" />
         </div>
       </div>
+
+      <nav className="effect-toggle">
+        {EFFECTS.map((e, i) => (
+          <button
+            key={e.id}
+            className={`effect-btn${i === activeIdx ? ' effect-btn--active' : ''}`}
+            onClick={() => setActiveIdx(i)}
+          >
+            {e.label}
+          </button>
+        ))}
+      </nav>
     </div>
   )
 }

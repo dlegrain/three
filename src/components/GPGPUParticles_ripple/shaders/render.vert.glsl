@@ -41,6 +41,6 @@ void main() {
   gl_Position = projectionMatrix * viewSpace;
   vScreenPos  = gl_Position.xy;
 
-  // Point size driven by ripple scale (pos.z) — peaks when wave passes
-  gl_PointSize = ((vScale * 5.0) * (uPixelRatio * 0.5) * uParticleScale) + (0.8 * uPixelRatio);
+  // Point size driven by ripple scale — tiny at rest, large at wave peak
+  gl_PointSize = ((vScale * 6.0) * (uPixelRatio * 0.5) * uParticleScale) + (0.4 * uPixelRatio);
 }

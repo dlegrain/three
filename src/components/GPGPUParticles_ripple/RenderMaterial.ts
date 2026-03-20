@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import renderVert from './shaders/render.vert.glsl'
 import renderFrag from './shaders/render.frag.glsl'
 
-const SIM_SIZE = 48
+const SIM_SIZE = 128
 
 export interface RenderOptions {
   color1: string

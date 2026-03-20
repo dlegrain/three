@@ -62,19 +62,19 @@ Trois anneaux concentriques de particules GPGPU sur fond blanc. Hover répulsif 
 ## Ripple
 **Dossier :** `src/components/GPGPUParticles_ripple/`
 
-2304 particules (48×48 GPGPU) disposées en grille régulière, comme une surface d'eau calme. Le curseur génère des ondes concentriques qui se propagent à la vitesse de la lumière (enfin, du GPU).
+16 384 particules (128×128 GPGPU) en grille fixe. Chaque mouvement de curseur déclenche une seule vague concentrique qui se propage depuis le curseur jusqu'au bord de l'écran, puis disparaît.
 
 ### Visuels
-- Au repos : grille légèrement animée par un bruit lent, couleur gris-bleu doux
-- Au hover : ondes concentriques se propagent depuis le curseur, les particules proches s'agrandissent et changent de couleur (`#2c64ed` → `#f84242` → `#ffcf03`)
-- Cercles mous (gaussian) au lieu de teardrops
-- L'onde s'atténue exponentiellement avec la distance
+- Au repos : grille de minuscules points quasi invisibles (gris-bleu très doux)
+- Sur mouvement : un unique anneau s'élargit depuis le curseur — les points qu'il traverse grossissent et s'illuminent (`#2c64ed` → `#f84242` → `#ffcf03`)
+- Une seule vague par geste (pas de répétition continue) — déclenchée uniquement sur `mousemove`
+- Les points restent fixes — seule leur taille et couleur changent au passage de l'onde
 
 ### Technique
-- GPGPU **48×48** (2304 particules) en grille régulière avec micro-jitter
-- Sim shader : `wave = sin(d * 18.0 - time * 4.0)`, `envelope = exp(-d * 3.5) * hover`
-- Pas de lifecycle — les particules restent en place, seule la taille pulse
-- Fragment shader : cercle gaussien `exp(-d*d*20.0)`, couleur driven by `vVelocity` (wave intensity)
+- GPGPU **128×128** (16 384 particules) en grille régulière, positions fixes (pas de déplacement XY)
+- `uWaveTime` : timer remis à 0 sur chaque `mousemove` (cooldown 0.8s), incrémenté chaque frame
+- Front de vague : pic gaussien `exp(-diff² * 200)` autour de `waveRadius = uWaveTime * 0.7`
+- Fade-out : `smoothstep(1.0, 0.8, waveRadius)` — la vague s'éteint en atteignant le bord
 
 ---
 

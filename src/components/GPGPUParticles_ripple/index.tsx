@@ -72,23 +72,26 @@ export function GPGPUParticles({
     const worldHit       = new THREE.Vector3()
     let isHoveringTarget = 0.0
     let isHovering       = 0.0
-    let pulseProgress    = 2.0
-    let skipFrame        = false
+    let waveTime         = 999.0   // inactive until first move
+    let lastMoveTime     = -999.0  // clock time of last mousemove
 
     const onMouseMove = (e: MouseEvent) => {
-      skipFrame = !skipFrame
-      if (skipFrame) return
       const rect = canvas.getBoundingClientRect()
       const ndcX =  ((e.clientX - rect.left) / rect.width)  * 2 - 1
       const ndcY = -((e.clientY - rect.top)  / rect.height) * 2 + 1
       raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera)
       raycaster.ray.intersectPlane(plane, worldHit)
       mouseWorld.set(worldHit.x, worldHit.y)
-      // Activate hover on first mouse move (covers cases where mouseenter fires late)
-      if (isHoveringTarget === 0.0) { isHoveringTarget = 1.0; pulseProgress = 0.0 }
+      if (isHoveringTarget === 0.0) isHoveringTarget = 1.0
+      // Trigger a new wave only if previous wave is done (>0.8s) or not yet started
+      const now = performance.now() / 1000
+      if (now - lastMoveTime > 0.8) {
+        waveTime     = 0.0
+        lastMoveTime = now
+      }
     }
 
-    const onMouseEnter = () => { isHoveringTarget = 1.0; pulseProgress = 0.0 }
+    const onMouseEnter = () => { isHoveringTarget = 1.0 }
     const onMouseLeave = () => { isHoveringTarget = 0.0; mouseWorld.set(0, 0) }
 
     canvas.addEventListener('mousemove',  onMouseMove)
@@ -98,24 +101,30 @@ export function GPGPUParticles({
     let raf: number
     const clock = new THREE.Clock()
 
+    let lastT = 0
     const tick = () => {
       raf = requestAnimationFrame(tick)
       const t  = clock.getElapsedTime()
+      const dt = t - lastT
+      lastT = t
 
       const lerpRate = isHoveringTarget > isHovering ? 0.05 : 0.02
       isHovering += (isHoveringTarget - isHovering) * lerpRate
 
-      if (pulseProgress < 2.0) pulseProgress += 1 / 60 * 0.5
+      // Advance waveTime each frame
+      if (waveTime < 999.0) waveTime += dt
 
       const { halfW, halfH } = getWorldScale()
 
+      // Pass waveTime to sim
+      sim.material.uniforms.uWaveTime.value = waveTime
+
       const gpgpuTex = sim.tick(t, isHovering, mouseWorld, halfW, halfH)
 
-      material.uniforms.uGpgpu.value         = gpgpuTex
-      material.uniforms.uTime.value          = t
-      material.uniforms.uIsHovering.value    = isHovering
-      material.uniforms.uPulseProgress.value = pulseProgress
-      material.uniforms.uMousePos.value      = mouseWorld
+      material.uniforms.uGpgpu.value      = gpgpuTex
+      material.uniforms.uTime.value       = t
+      material.uniforms.uIsHovering.value = isHovering
+      material.uniforms.uMousePos.value   = mouseWorld
 
       renderer.render(scene, camera)
     }

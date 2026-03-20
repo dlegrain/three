@@ -36,7 +36,7 @@ void main() {
   // Calm state: soft grey-blue
   col = mix(vec3(0.75, 0.78, 0.85), col, v);
 
-  float a = uAlpha * circle * smoothstep(0.0, 0.15, vScale);
+  float a = uAlpha * circle * (0.12 + vVelocity * 0.88);
 
   if (a < 0.01) discard;
 

@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import simFrag from './shaders/sim.frag.glsl'
 
-const SIM_SIZE = 48  // 48×48 = 2304 particles — denser grid for ripple
+const SIM_SIZE = 128  // 128×128 = 16384 particles — dense grid for ripple
 
 // All simulation positions live in normalized [-0.5, 0.5] space.
 // The vertex shader scales them to fill the screen.
@@ -54,7 +54,7 @@ export class SimulationRenderer {
   private renderer: THREE.WebGLRenderer
   private scene: THREE.Scene
   private camera: THREE.OrthographicCamera
-  private material: THREE.ShaderMaterial
+  material: THREE.ShaderMaterial
   private targets: [THREE.WebGLRenderTarget, THREE.WebGLRenderTarget]
   private nearestTex: THREE.DataTexture
   private nearestData: Float32Array
@@ -92,6 +92,7 @@ export class SimulationRenderer {
         uPosNearest: { value: this.nearestTex },
         uMousePos:   { value: new THREE.Vector2(0, 0) },
         uTime:       { value: 0 },
+        uWaveTime:   { value: 999.0 },  // time since last wave trigger (999 = inactive)
         uIsHovering: { value: 0.0 },
       },
     })
@@ -132,6 +133,7 @@ export class SimulationRenderer {
     this.material.uniforms.uTime.value       = time
     this.material.uniforms.uIsHovering.value = isHovering
     this.material.uniforms.uMousePos.value.set(mouseSimX, mouseSimY)
+    // uWaveTime is set externally by index.tsx on mousemove
 
     this.renderer.setRenderTarget(write)
     this.renderer.render(this.scene, this.camera)

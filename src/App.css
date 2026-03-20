@@ -121,3 +121,43 @@ body {
 .title-sub-text {
   opacity: 1;
 }
+
+/* ── Effect toggle ───────────────────────────────────────────────────────── */
+
+.effect-toggle {
+  position: absolute;
+  bottom: 24px;
+  right: 28px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.effect-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #aaa;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.2s;
+}
+
+.effect-btn:hover {
+  color: #555;
+}
+
+.effect-btn--active {
+  color: #111;
+  font-weight: 500;
+}
+
+.effect-btn + .effect-btn::before {
+  content: '·';
+  margin-right: 6px;
+  color: #ccc;
+}

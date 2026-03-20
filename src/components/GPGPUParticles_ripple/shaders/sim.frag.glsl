@@ -5,6 +5,7 @@ uniform sampler2D uPosRefs;
 uniform sampler2D uPosNearest;
 uniform vec2 uMousePos;
 uniform float uTime;
+uniform float uWaveTime;   // seconds since last wave trigger (999 = inactive)
 uniform float uIsHovering;
 
 vec2 hash(vec2 p) {
@@ -13,7 +14,7 @@ vec2 hash(vec2 p) {
 }
 
 void main() {
-  vec2 simTexCoords = gl_FragCoord.xy / vec2(32.0, 32.0);
+  vec2 simTexCoords = gl_FragCoord.xy / vec2(128.0, 128.0);
   vec4 pFrame = texture2D(uPosition, simTexCoords);
 
   float scale    = pFrame.z;
@@ -24,35 +25,31 @@ void main() {
   float seed  = hash(simTexCoords).x;
   float seed2 = hash(simTexCoords).y;
 
-  vec2 pos = pFrame.xy;
+  // Positions are fixed on the grid — no XY displacement
+  vec2 pos = refPos;
 
-  // Ripple: distance from cursor to this particle's rest position
-  vec2 toMouse = refPos - uMousePos;
-  float d = length(toMouse);
+  // Distance from this particle's grid position to cursor (in sim space [-0.5, 0.5])
+  float d = length(refPos - uMousePos);
 
-  // Multiple expanding ripple waves emanating from cursor
-  float wave1 = sin(d * 18.0 - uTime * 4.0) * 0.5 + 0.5;
-  float wave2 = sin(d * 12.0 - uTime * 3.0 + 1.5) * 0.5 + 0.5;
+  // Single wave triggered on mousemove: front expands from 0 → 1.0 in ~1.4s
+  float waveSpeed  = 0.7;
+  float waveRadius = uWaveTime * waveSpeed;
 
-  // Ripple envelope: strong near cursor, fades with distance
-  float envelope = exp(-d * 3.5) * uIsHovering;
-  float ripple = (wave1 * 0.7 + wave2 * 0.3) * envelope;
+  // Narrow gaussian peak around the expanding front
+  float diff  = d - waveRadius;
+  float pulse = exp(-diff * diff * 200.0);
 
-  // Particles stay near their grid position, displaced slightly by ripple
-  float dispX = sin(d * 20.0 - uTime * 4.5 + seed  * 6.28) * 0.015 * envelope;
-  float dispY = cos(d * 20.0 - uTime * 4.5 + seed2 * 6.28) * 0.015 * envelope;
+  // Fade to zero as ring reaches edge or after wave dies out
+  float fadeOut = smoothstep(1.0, 0.8, waveRadius);
 
-  // Gentle drift back to grid position
-  pos += (refPos - pos) * 0.08;
-  pos.x += dispX;
-  pos.y += dispY;
+  float ripple = pulse * fadeOut;
 
-  // Scale encodes ripple height — used for visual lift
-  float targetScale = 0.3 + ripple * 1.2 + seed * 0.2;
-  scale += (targetScale - scale) * 0.12;
+  // Scale: near-zero at rest, modest peak — 16k points make the ring visible
+  float targetScale = 0.02 + ripple * 0.9 + seed * 0.03;
+  scale += (targetScale - scale) * 0.2;
 
-  // Velocity encodes ripple intensity for color
-  velocity += (ripple - velocity) * 0.15;
+  // Velocity = ripple intensity for color
+  velocity += (ripple - velocity) * 0.2;
 
   gl_FragColor = vec4(pos, scale, velocity);
 }
