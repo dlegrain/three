@@ -43,7 +43,7 @@ void main() {
   gl_Position = projectionMatrix * viewSpace;
   vScreenPos  = gl_Position.xy;
 
-  // In vortex: particles shrink (speed blur illusion) + bright core
-  float sizeBoost = 1.0 + pos.w * 1.5;
+  // In vortex: particles shrink to stay distinct (avoid continuous ring)
+  float sizeBoost = 1.0 - pos.w * 0.25;
   gl_PointSize = ((vScale * 6.0) * (uPixelRatio * 0.5) * uParticleScale * sizeBoost) + (0.3 * uPixelRatio);
 }

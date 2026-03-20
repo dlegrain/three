@@ -47,8 +47,8 @@ void main() {
   if (tangentLen > 0.0001) tangent /= tangentLen;
 
   // Inward pull (spiral inward) — kept subtle to avoid magma clump
-  float inwardStrength = 0.004 * influence;
-  float tangentialStrength = 0.016 * influence * uVortexStrength;
+  float inwardStrength = 0.002 * influence;
+  float tangentialStrength = 0.009 * influence * uVortexStrength;
 
   // Apply tangential spin + very light inward pull
   pos += tangent * tangentialStrength;
@@ -71,7 +71,7 @@ void main() {
 
   // Scale: birth/death cycle + subtle vortex boost (no inflate)
   float targetScale = smoothstep(0.01, 0.4, lifeTime) - smoothstep(0.5, 1.0, lifeTime / lifeEnd);
-  targetScale += influence * 0.4;
+  targetScale += influence * 0.2;
   scale += (targetScale - scale) * 0.1;
 
   // Velocity encodes vortex influence for rendering (color/glow)

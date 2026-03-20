@@ -25,17 +25,15 @@ void main() {
   float d = length(uv);
   float circle = exp(-d * d * 14.0);
 
-  // Inner bright core (extra glow in vortex)
-  float core = exp(-d * d * 60.0) * vVelocity * 2.0;
+  // Subtle core highlight (no color shift, just brightness)
+  float core = exp(-d * d * 60.0) * vVelocity * 0.5;
 
-  // Color: velocity drives the gradient
-  // Low velocity = uColor1 (rest), high = uColor2/3 (vortex)
-  float t = smoothstep(0.0, 1.0, vVelocity);
+  // Color: only blend between color1 and color2 — never reach color3
+  float t = smoothstep(0.0, 1.0, vVelocity) * 0.7;
   vec3 col = mix(uColor1, uColor2, t);
-  col = mix(col, uColor3, smoothstep(0.6, 1.0, vVelocity));
 
-  // Add white core flare
-  col = mix(col, vec3(1.0), core * 0.8);
+  // Slight brightness boost at core, no hue change
+  col = mix(col, col * 1.4, core);
 
   float a = uAlpha * circle * smoothstep(0.0, 0.15, vScale);
 
